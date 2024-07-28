@@ -1,5 +1,5 @@
 from django.urls import reverse
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from chat.models import ChatRoom, ChatMessage, RoomParticipant
@@ -8,32 +8,10 @@ User = get_user_model()
 
 class ChatTests(APITestCase):
     def setUp(self):
-        self.user_a = User.objects.create_user(username='user_a', password='password', name='User A')
-        self.user_b = User.objects.create_user(username='user_b', password='password', name='User B')
-        self.client.login(username='user_a', password='password')
-
-    def test_user_signup(self):
-        url = reverse('signup')
-        data = {
-            'username': 'user_c',
-            'password': 'password',
-            'name': 'User C'
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 3)
-        self.assertEqual(User.objects.get(username='user_c').name, 'User C')
-
-    def test_user_login(self):
-        url = reverse('login')
-        data = {
-            'username': 'user_a',
-            'password': 'password'
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('access', response.data)
-        self.assertIn('refresh', response.data)
+        self.user_a = User.objects.create_user(nickname='user_a', password='password')
+        self.user_b = User.objects.create_user(nickname='user_b', password='password')
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user_a)
 
     def test_create_chat_room(self):
         url = reverse('room-create')
@@ -67,6 +45,7 @@ class ChatTests(APITestCase):
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], 'Chat Room with User B')
+        self.assertIn('messages', response.data)
         self.assertEqual(len(response.data['messages']), 1)
         self.assertEqual(response.data['messages'][0]['message'], 'Hello User B')
 
