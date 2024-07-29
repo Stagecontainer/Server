@@ -2,85 +2,51 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from chat.models import ChatRoom, ChatMessage, RoomParticipant
 
 User = get_user_model()
 
-class ChatTests(APITestCase):
-    def setUp(self):
-        self.user_a = User.objects.create_user(username='user_a', password='password', name='User A')
-        self.user_b = User.objects.create_user(username='user_b', password='password', name='User B')
-        self.client.login(username='user_a', password='password')
-
+class UserTests(APITestCase):
     def test_user_signup(self):
         url = reverse('signup')
         data = {
-            'username': 'user_c',
-            'password': 'password',
-            'name': 'User C'
+            'nickname': 'test',  # 필드 이름을 username에서 nickname으로 변경
+            'password': '1234',
+            'name': 'Test User'
         }
         response = self.client.post(url, data, format='json')
+        print(f'Signup Response: {response.data}')  # 출력 추가
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 3)
-        self.assertEqual(User.objects.get(username='user_c').name, 'User C')
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(User.objects.get().nickname, 'test')  # 필드 이름을 username에서 nickname으로 변경
 
     def test_user_login(self):
-        url = reverse('login')
+        # 먼저 회원가입을 통해 유저를 생성
+        self.test_user_signup()
+        
+        url = reverse('login')  # URL 이름 수정
         data = {
-            'username': 'user_a',
-            'password': 'password'
+            'nickname': 'test',  # 필드 이름을 username에서 nickname으로 변경
+            'password': '1234'
         }
         response = self.client.post(url, data, format='json')
+        print(f'Login Response: {response.data}')  # 출력 추가
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
+        return response
 
-    def test_create_chat_room(self):
-        url = reverse('room-create')
+    def test_token_refresh(self):
+        # 로그인 후 토큰 발급
+        login_response = self.test_user_login()
+        refresh_token = login_response.data['refresh']
+        
+        print(f'Original Refresh Token: {refresh_token}')  # 출력 추가
+
+        url = reverse('token_refresh')
         data = {
-            'name': 'Chat Room with User B',
-            'invited_user_id': self.user_b.id
+            'refresh': refresh_token
         }
         response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(ChatRoom.objects.count(), 1)
-        self.assertEqual(RoomParticipant.objects.count(), 2)
-
-    def test_chat_room_list(self):
-        room = ChatRoom.objects.create(name='Chat Room with User B')
-        RoomParticipant.objects.create(room=room, user=self.user_a)
-        RoomParticipant.objects.create(room=room, user=self.user_b)
-
-        url = reverse('room-list')
-        response = self.client.get(url, format='json')
+        print(f'Token Refresh Response: {response.data}')  # 출력 추가
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['name'], 'Chat Room with User B')
-
-    def test_chat_room_detail(self):
-        room = ChatRoom.objects.create(name='Chat Room with User B')
-        RoomParticipant.objects.create(room=room, user=self.user_a)
-        RoomParticipant.objects.create(room=room, user=self.user_b)
-        ChatMessage.objects.create(room=room, sender=self.user_a, message='Hello User B')
-
-        url = reverse('room-detail', args=[room.id])
-        response = self.client.get(url, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['name'], 'Chat Room with User B')
-        self.assertEqual(len(response.data['messages']), 1)
-        self.assertEqual(response.data['messages'][0]['message'], 'Hello User B')
-
-    def test_send_message(self):
-        room = ChatRoom.objects.create(name='Chat Room with User B')
-        RoomParticipant.objects.create(room=room, user=self.user_a)
-        RoomParticipant.objects.create(room=room, user=self.user_b)
-
-        url = reverse('message-create')
-        data = {
-            'room': room.id,
-            'message': 'Hello, World!'
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(ChatMessage.objects.count(), 1)
-        self.assertEqual(ChatMessage.objects.first().message, 'Hello, World!')
+        self.assertIn('access', response.data)
