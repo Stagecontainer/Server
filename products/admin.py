@@ -1,7 +1,6 @@
 from django.contrib import admin
-from .models import ProductionPost, SalesPost, RentalPost, RequestPost
+from .models import Post, PostImage, Request
 
-admin.site.register(ProductionPost)
-admin.site.register(SalesPost)
-admin.site.register(RentalPost)
-admin.site.register(RequestPost)
+admin.site.register(Post)
+admin.site.register(PostImage)
+admin.site.register(Request)
