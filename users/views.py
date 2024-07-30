@@ -20,3 +20,18 @@ class UserCreateView(generics.CreateAPIView):
 
 class LoginView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.user
+        token = serializer.validated_data
+        return Response({
+            "message": "로그인이 완료되었습니다.",
+            "profile": {
+                "id": user.id,
+                "nickname": user.nickname
+            },
+            "refresh": token['refresh'],
+            "access": token['access']
+        }, status=status.HTTP_200_OK)
