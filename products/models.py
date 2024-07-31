@@ -1,6 +1,7 @@
 from django.db import models
 
 class Post(models.Model):
+    post_id = models.AutoField(primary_key=True)
     purpose_choices = [
         ('의뢰 제작','의뢰 제작'),
         ('중고 판매','중고 판매'),
@@ -28,6 +29,7 @@ class Post(models.Model):
         return f"{self.company}"
 
 class PostImage(models.Model):
+    image_id = models.AutoField(primary_key=True)
     post = models.ForeignKey(Post, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='post_images/')
 
@@ -35,6 +37,7 @@ class PostImage(models.Model):
         return f"{self.post}"
 
 class Request(models.Model):
+    request_id = models.AutoField(primary_key=True)
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     name = models.CharField(max_length=10, default='')
