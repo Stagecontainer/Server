@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from .models import Post, PostImage, Request
+from .models import Post, PostImage, Request, ReferenceImage
 
 class PostImageSerializer(ModelSerializer):
     class Meta:
@@ -13,7 +13,15 @@ class PostSerializer(ModelSerializer):
         model = Post
         fields = "__all__"
 
+class ReferenceImageSerializer(ModelSerializer):
+    class Meta:
+        model = ReferenceImage
+        fields = ['refer_id', 'image']
+
 class RequestSerializer(ModelSerializer):
+    post = PostSerializer()
+    referimages = ReferenceImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Request
         fields = "__all__"

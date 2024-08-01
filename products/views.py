@@ -29,12 +29,11 @@ class PostDetailView(APIView):
         return Response(serializer.data)
 
 class RequestListView(APIView):
-    def get_object(self, user_id):
-        return RequestModel.objects.filter(user_id=user_id)
-
     def get(self, request, user_id):
-        requests = self.get_object(user_id)
+        requests = RequestModel.objects.filter(user_id=user_id).select_related('post')
+
         if not requests.exists():
             raise NotFound("이 사용자에 대한 요청을 찾을 수 없습니다")
+        
         serializer = RequestSerializer(requests, many=True)
         return Response(serializer.data)
