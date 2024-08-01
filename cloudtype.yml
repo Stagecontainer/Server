@@ -4,10 +4,16 @@ build:
 
 deploy:
   environment:
-    DJANGO_SECRET: 'your_secret_key'
+    DJANGO_SECRET: 'django-insecure-thn3m&bb!u!c4aqge!-a_&4)g*p1$*8d#k62pwv+kd54b&ul_%'
     DJANGO_SUPERUSER_USERNAME: 'admin'
     DJANGO_SUPERUSER_PASSWORD: 'password'
     DJANGO_SUPERUSER_EMAIL: 'admin@example.com'
+    DJANGO_SUPERUSER_NICKNAME: 'admin'
     DJANGO_SETTINGS_MODULE: 'config.settings'
-  command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+  command: >
+    bash -c "
+      python manage.py migrate &&
+      python manage.py createsuperuser --noinput --username $DJANGO_SUPERUSER_USERNAME --email $DJANGO_SUPERUSER_EMAIL &&
+      daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    "
   port: 8000
