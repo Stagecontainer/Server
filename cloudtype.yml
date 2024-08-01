@@ -1,0 +1,16 @@
+name: django-channels-app
+services:
+  web:
+    build:
+      context: .
+    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+    depends_on:
+      - redis
+  redis:
+    image: redis:5
+    ports:
+      - "6379:6379"
