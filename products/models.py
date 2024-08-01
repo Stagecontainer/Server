@@ -23,7 +23,7 @@ class Post(models.Model):
     logo_img = models.ImageField(upload_to='logo_images/', blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=0, default=0)
     company_num = models.CharField(max_length=20, default='')
-    company_img = models.ImageField(upload_to='company_images/', blank=True, null=True)
+    company_img = models.FileField(upload_to='company_files/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.company}"
@@ -44,4 +44,8 @@ class Request(models.Model):
     number = models.CharField(max_length=20, default='')
     address = models.CharField(max_length=30, default='')
     content = models.TextField(default='')
-    reference_img = models.ImageField(upload_to='reference_images/', blank=True, null=True)
+
+class ReferenceImage(models.Model):
+    refer_id = models.AutoField(primary_key=True)
+    request = models.ForeignKey(Request, related_name='referimages', on_delete=models.CASCADE)
+    image = models.FileField(upload_to='reference_files/', blank=True, null=True)
