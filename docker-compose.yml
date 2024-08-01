@@ -5,13 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings
-      - DJANGO_SECRET=django-insecure-thn3m&bb!u!c4aqge!-a_&4)g*p1$*8d#k62pwv+kd54b&ul_%
-      - DJANGO_SUPERUSER_USERNAME=admin
-      - DJANGO_SUPERUSER_PASSWORD=password
-      - DJANGO_SUPERUSER_EMAIL=admin@example.com
-      - DJANGO_SUPERUSER_NICKNAME=admin
+    env_file:
+      - .env
     command: >
       bash -c "
         python manage.py migrate &&
