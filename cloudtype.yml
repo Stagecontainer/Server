@@ -1,16 +1,13 @@
-name: django-channels-app
-services:
-  web:
-    build:
-      context: .
-    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
-    ports:
-      - "8000:8000"
-    environment:
-      DJANGO_SETTINGS_MODULE: config.settings
-    depends_on:
-      - redis
-  redis:
-    image: redis:5
-    ports:
-      - "6379:6379"
+build:
+  dockerfile_path: Dockerfile
+  context: ./
+
+deploy:
+  environment:
+    DJANGO_SECRET: 'your_secret_key'
+    DJANGO_SUPERUSER_USERNAME: 'admin'
+    DJANGO_SUPERUSER_PASSWORD: 'password'
+    DJANGO_SUPERUSER_EMAIL: 'admin@example.com'
+    DJANGO_SETTINGS_MODULE: 'config.settings'
+  command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+  port: 8000

@@ -1,27 +1,23 @@
-version: '3.8'
+version: '3'
 
 services:
   web:
-    build: .
-    command: >
-      sh -c "
-      python manage.py makemigrations &&
-      python manage.py migrate &&
-      python manage.py createsuperuser --noinput --username=${DJANGO_SUPERUSER_USERNAME} --email=${DJANGO_SUPERUSER_EMAIL} --nickname='admin' &&
-      daphne -b 0.0.0.0 -p 8000 config.asgi:application
-      "
-    volumes:
-      - .:/app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_SECRET=django-insecure-thn3m&bb!u!c4aqge!-a_&4)g*p1$*8d#k62pwv+kd54b&ul_%
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=password
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
     ports:
       - "8000:8000"
     depends_on:
       - redis
-    environment:
-      DJANGO_SECRET: ${DJANGO_SECRET}
-      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
-      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
-      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
+
   redis:
-    image: redis:5.0.14
+    image: "redis:alpine"
     ports:
       - "6379:6379"
