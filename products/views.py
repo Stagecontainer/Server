@@ -1,8 +1,10 @@
 from rest_framework.views import APIView
 from .models import Post as PostModel
 from .models import Request as RequestModel
-from .serializers import PostSerializer, RequestSerializer
+from .serializers import PostSerializer, RequestSerializer, RequestDetailSerializer
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+from rest_framework import status
 
 class PostListView(APIView):
     def get(self, request): # GET /products
@@ -37,3 +39,20 @@ class RequestListView(APIView):
         
         serializer = RequestSerializer(requests, many=True)
         return Response(serializer.data)
+
+class RequestPostView(APIView):
+    def post(self, request, user_id, post_id):
+        try:
+            post = PostModel.objects.get(post_id=post_id)
+        except PostModel.DoesNotExist:
+            raise NotFound("해당 포스트를 찾을 수 없습니다.")
+
+        data = request.data.copy()
+        data['user'] = user_id
+        data['post'] = post_id 
+
+        serializer = RequestDetailSerializer(data=data)
+        if serializer.is_valid():
+            request_instance = serializer.save()
+            return Response(RequestDetailSerializer(request_instance).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
