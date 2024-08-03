@@ -9,11 +9,14 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            nickname=validated_data['nickname'],
-            password=validated_data['password']
-        )
-        return user
+        try:
+            user = User.objects.create_user(
+                nickname=validated_data['nickname'],
+                password=validated_data['password']
+            )
+            return user
+        except Exception as e:
+            raise serializers.ValidationError({"detail": str(e)})
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
