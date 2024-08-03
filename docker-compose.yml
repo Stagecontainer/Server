@@ -11,21 +11,27 @@ services:
       bash -c "
         python manage.py migrate &&
         python manage.py createsuperuser --noinput --username $DJANGO_SUPERUSER_USERNAME --email $DJANGO_SUPERUSER_EMAIL &&
-        daphne -b 0.0.0.0 -p 8000 config.asgi:application
+        /app/wait-for-it.sh redis:6379 -- daphne -b 0.0.0.0 -p 8000 config.asgi:application
       "
     ports:
       - "8000:8000"
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     networks:
       - chatnet
 
   redis:
-    image: "redis:alpine"
+    image: "redis:5"
     ports:
       - "6379:6379"
     networks:
       - chatnet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   chatnet:
