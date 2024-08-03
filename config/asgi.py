@@ -9,13 +9,12 @@ from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator
 import chat.routing
 from channels.layers import get_channel_layer
+from chat.middleware import TokenAuthMiddleware 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": AllowedHostsOriginValidator(
-        AuthMiddlewareStack(
-            URLRouter(
-                chat.routing.websocket_urlpatterns
-            )
+    "websocket": TokenAuthMiddleware(
+        URLRouter(
+            chat.routing.websocket_urlpatterns
         )
     ),
 })

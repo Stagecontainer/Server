@@ -3,7 +3,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from .models import ChatRoom, ChatMessage
 from django.contrib.auth import get_user_model
 from channels.db import database_sync_to_async
-from channels.auth import get_user
 
 User = get_user_model()
 
@@ -11,6 +10,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'chat_{self.room_id}'
+        
+        # Check if room exists
+        try:
+            await self.get_room(self.room_id)
+        except ChatRoom.DoesNotExist:
+            await self.close()
+            return
         
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -29,17 +35,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         
-        user = await get_user(self.scope)
-        await self.save_message(user, self.room_id, message)
-
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message,
-                'sender': user.username
-            }
-        )
+        user = self.scope["user"]
+        if user.is_anonymous:
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': 'Authentication required.'
+            }))
+            return
+        
+        try:
+            await self.save_message(user, self.room_id, message)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                    'sender': user.username
+                }
+            )
+        except ChatRoom.DoesNotExist:
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': f'ChatRoom with id {self.room_id} does not exist.'
+            }))
     
     async def chat_message(self, event):
         message = event['message']
@@ -52,6 +70,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
     
     @database_sync_to_async
+    def get_room(self, room_id):
+        return ChatRoom.objects.get(id=room_id)
+    
+    @database_sync_to_async
     def save_message(self, user, room_id, message):
-        room = ChatRoom.objects.get(id=room_id)
+        room = self.get_room(room_id)
         ChatMessage.objects.create(room=room, sender=user, message=message)
