@@ -3,6 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from .models import ChatRoom, ChatMessage
 from django.contrib.auth import get_user_model
 from channels.db import database_sync_to_async
+from channels.auth import get_user
 
 User = get_user_model()
 
@@ -28,14 +29,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         
-        await self.save_message(self.scope["user"], self.room_id, message)
+        user = await get_user(self.scope)
+        await self.save_message(user, self.room_id, message)
 
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
                 'message': message,
-                'sender': self.scope["user"].username
+                'sender': user.username
             }
         )
     
