@@ -18,25 +18,13 @@ def get_user_from_token(token):
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, User.DoesNotExist):
         return AnonymousUser()
 
-class TokenAuthMiddleware:
-    def __init__(self, inner):
-        self.inner = inner
-
-    def __call__(self, scope):
-        return TokenAuthMiddlewareInstance(scope, self)
-
-class TokenAuthMiddlewareInstance:
-    def __init__(self, scope, middleware):
-        self.scope = scope
-        self.middleware = middleware
-
-    async def __call__(self, receive, send):
-        query_string = parse_qs(self.scope["query_string"].decode())
+class TokenAuthMiddleware(BaseMiddleware):
+    async def __call__(self, scope, receive, send):
+        query_string = parse_qs(scope["query_string"].decode())
         token = query_string.get("token")
         if token:
-            self.scope["user"] = await get_user_from_token(token[0])
+            scope["user"] = await get_user_from_token(token[0])
         else:
-            self.scope["user"] = AnonymousUser()
+            scope["user"] = AnonymousUser()
 
-        inner = self.middleware.inner(self.scope)
-        return await inner(receive, send)
+        return await super().__call__(scope, receive, send)
