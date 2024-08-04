@@ -12,6 +12,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'chat_{self.room_id}'
         
+        # room_id가 존재하는지 확인
         try:
             await self.get_room(self.room_id)
         except ObjectDoesNotExist:
