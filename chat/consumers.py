@@ -45,7 +45,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     'type': 'chat_message',
                     'message': message,
-                    'sender': self.scope["user"].username
+                    'sender': self.scope["user"].nickname  
                 }
             )
         except ObjectDoesNotExist:
