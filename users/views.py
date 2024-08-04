@@ -21,7 +21,6 @@ class UserCreateView(generics.CreateAPIView):
                 "message": "회원가입이 완료되었습니다."
             }, status=status.HTTP_201_CREATED)
         except ValidationError as e:
-            # Check if the error is due to a unique constraint on nickname
             if 'nickname' in serializer.errors and any(
                 'unique' in error for error in serializer.errors['nickname']
             ):
@@ -54,7 +53,7 @@ class CurrentUserView(APIView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        return Response({'nickname': user.nickname}),status.HTTP_200_OK
+        return Response({'nickname': user.nickname}, status=status.HTTP_200_OK)
 
 class GetUserIdView(APIView):
     permission_classes = [IsAuthenticated]
@@ -66,6 +65,6 @@ class GetUserIdView(APIView):
         
         try:
             user = User.objects.get(nickname=nickname)
-            return Response({'id': user.id}), status.HTTP_200_OK
+            return Response({'id': user.id}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
