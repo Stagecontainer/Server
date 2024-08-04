@@ -13,6 +13,8 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         return ChatMessageSerializer(last_message).data if last_message else None
 
 class ChatMessageSerializer(serializers.ModelSerializer):
+    sender = serializers.ReadOnlyField(source='sender.nickname')
+
     class Meta:
         model = ChatMessage
         fields = ['id', 'room', 'sender', 'message', 'timestamp']

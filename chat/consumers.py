@@ -35,23 +35,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
+        sender_nickname = text_data_json['sender']
         
         try:
             room = await self.get_room(self.room_id)
-            await self.save_message(self.scope["user"], room, message)
+            sender = await self.get_user(sender_nickname)
+            await self.save_message(sender, room, message)
 
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'chat_message',
                     'message': message,
-                    'sender': self.scope["user"].nickname  
+                    'sender': sender_nickname  
                 }
             )
         except ObjectDoesNotExist:
             await self.send(text_data=json.dumps({
                 'type': 'error',
-                'message': 'Room does not exist.'
+                'message': 'Room or user does not exist.'
             }))
     
     async def chat_message(self, event):
@@ -67,6 +69,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_room(self, room_id):
         return ChatRoom.objects.get(id=room_id)
+    
+    @database_sync_to_async
+    def get_user(self, nickname):
+        return User.objects.get(nickname=nickname)
     
     @database_sync_to_async
     def save_message(self, user, room, message):
