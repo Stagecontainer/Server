@@ -53,3 +53,11 @@ class ChatRoomListView(generics.ListAPIView):
         user = self.request.user
         participant_rooms = RoomParticipant.objects.filter(user=user).values_list('room', flat=True)
         return ChatRoom.objects.filter(id__in=participant_rooms)
+
+class ChatMessageListView(generics.ListAPIView):
+    serializer_class = ChatMessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        room_id = self.kwargs['room_id']
+        return ChatMessage.objects.filter(room_id=room_id).order_by('timestamp')
