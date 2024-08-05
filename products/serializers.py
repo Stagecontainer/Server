@@ -8,15 +8,14 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = (
             'post_id', 'company', 'purpose', 'category', 'address', 'rating',
-            'title', 'content', 'content_img', 'images', 'promotion',
-            'logo_img', 'price', 'company_num', 'company_img', 'user'
+            'title', 'content', 'content_img', 'image1', 'image2', 'image3', 'image4', 'image5', 
+            'promotion', 'logo_img', 'price', 'company_num', 'company_img', 'user', 'images'
         )
-    
+
     def get_images(self, obj):
-        # 이미지 필드들을 배열로 반환
-        image_fields = [obj.image1, obj.image2, obj.image3, obj.image4, obj.image5]
-        # 각 이미지 필드가 None이면 빈 문자열로 처리
-        return [image.url if image else '' for image in image_fields]
+        # 이미지 필드들을 리스트로 반환하며, 값이 없으면 빈 문자열을 반환
+        image_fields = ['image1', 'image2', 'image3', 'image4', 'image5']
+        return [getattr(obj, field).url if getattr(obj, field) else '' for field in image_fields]
 
 class RequestSerializer(serializers.ModelSerializer):
     post = PostSerializer()
