@@ -61,3 +61,14 @@ class ChatMessageListView(generics.ListAPIView):
     def get_queryset(self):
         room_id = self.kwargs['room_id']
         return ChatMessage.objects.filter(room_id=room_id).order_by('timestamp')
+
+class ChatRoomDeleteView(generics.DestroyAPIView):
+    queryset = ChatRoom.objects.all()
+    serializer_class = ChatRoomSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+    def perform_destroy(self, instance):
+        ChatMessage.objects.filter(room=instance).delete()
+        RoomParticipant.objects.filter(room=instance).delete()
+        instance.delete()
