@@ -1,0 +1,18 @@
+build:
+  dockerfile_path: Dockerfile
+  context: ./
+
+deploy:
+  environment:
+    DJANGO_SECRET: ${DJANGO_SECRET}
+    DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
+    DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
+    DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
+    DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
+  command: >
+    bash -c "
+      python manage.py migrate &&
+      python manage.py createsuperuser --noinput --username $DJANGO_SUPERUSER_USERNAME --email $DJANGO_SUPERUSER_EMAIL &&
+      daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    "
+  port: 8000
