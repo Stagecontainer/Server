@@ -4,6 +4,8 @@ from .models import ChatRoom, ChatMessage, RoomParticipant
 from .serializers import ChatRoomSerializer, ChatMessageSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
+
 
 User = get_user_model()
 
@@ -12,13 +14,19 @@ class ChatRoomCreateView(generics.CreateAPIView):
     serializer_class = ChatRoomSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
+def perform_create(self, serializer):
+        invited_user_id = self.request.data.get('invited_user_id')
+        if not invited_user_id:
+            raise ValidationError({"invited_user_id": "This field is required."})
+        
+        try:
+            invited_user = User.objects.get(id=invited_user_id)
+        except User.DoesNotExist:
+            raise ValidationError({"invited_user_id": "Invalid user ID."})
+
         room = serializer.save()
         RoomParticipant.objects.create(room=room, user=self.request.user)
-        invited_user_id = self.request.data.get('invited_user_id')
-        if invited_user_id:
-            invited_user = User.objects.get(id=invited_user_id)
-            RoomParticipant.objects.create(room=room, user=invited_user)
+        RoomParticipant.objects.create(room=room, user=invited_user)
 
 class ChatMessageCreateView(generics.CreateAPIView):
     queryset = ChatMessage.objects.all()
